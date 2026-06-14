@@ -35,7 +35,8 @@ export async function provisionTenant(
   try {
     await client.query("BEGIN");
     await client.query(`CREATE SCHEMA "${schema}"`);
-    await client.query(`SET search_path TO "${schema}"`);
+    // Include public so the `vector` type (extension lives in public) resolves.
+    await client.query(`SET search_path TO "${schema}", public`);
     await client.query(schemaSql);
     await client.query("RESET search_path");
     await client.query(

@@ -8,7 +8,7 @@
  * All queries are tenant-scoped through withTenant() which sets search_path.
  */
 import { withTenant } from "../api/db.ts";
-import { embed, toVector } from "./embeddings.ts";
+import { embed, embeddingsEnabled, toVector } from "./embeddings.ts";
 
 export type Role = "user" | "assistant" | "tool";
 
@@ -65,13 +65,17 @@ export async function recentMessages(
   });
 }
 
-/** Store a memory with its embedding for later semantic recall. */
+/**
+ * Store a memory for later recall. When embeddings are enabled the content is
+ * embedded for semantic search; when disabled it's stored with a NULL embedding
+ * (kept, but not semantically recalled) so re-enabling later loses nothing.
+ */
 export async function rememberFact(
   tenantId: string,
   content: string,
   source = "conversation",
 ): Promise<void> {
-  const vector = toVector(await embed(content));
+  const vector = embeddingsEnabled ? toVector(await embed(content)) : null;
   await withTenant(tenantId, (c) =>
     c.query(
       "INSERT INTO agent_memory (content, embedding, source) VALUES ($1, $2, $3)",
@@ -96,6 +100,7 @@ export async function recallMemories(
   query: string,
   k = 8,
 ): Promise<RecalledMemory[]> {
+  if (!embeddingsEnabled) return []; // semantic recall off
   const vector = toVector(await embed(query));
   return withTenant(tenantId, async (c) => {
     const { rows } = await c.query<RecalledMemory>(

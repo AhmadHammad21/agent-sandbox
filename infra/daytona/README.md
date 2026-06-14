@@ -23,8 +23,8 @@ DAYTONA_API_KEY=<key from the Daytona dashboard>
 - One persistent sandbox per tenant, labelled `tenant_id=<id>`.
 - The sandbox id is stored in each tenant's `sandbox_state` table so sessions
   resume the same workspace instead of creating a new one.
-- See `api/sandboxes/manager.ts` for the lifecycle (create / resume / pause /
-  delete) and `agent/tools/index.ts` for how the agent executes code and
+- See `src/api/sandboxes/manager.ts` for the lifecycle (create / resume / pause /
+  delete) and `src/agent/tools/index.ts` for how the agent executes code and
   reads/writes files inside the sandbox.
 
 ## Managed alternative

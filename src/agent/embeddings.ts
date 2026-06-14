@@ -19,7 +19,13 @@ export const EMBEDDING_DIM = 1536;
 
 const provider = config.embeddings.provider;
 
+/** Whether semantic (vector) memory is active. When false, recall is skipped. */
+export const embeddingsEnabled = provider !== "none";
+
 export async function embed(text: string): Promise<number[]> {
+  if (!embeddingsEnabled) {
+    throw new Error("Embeddings are disabled (EMBEDDING_PROVIDER=none)");
+  }
   if (provider === "voyage") return embedVoyage(text);
   return embedLocal(text);
 }

@@ -35,11 +35,15 @@ export async function putArtifact(
   contentType = "application/octet-stream",
 ): Promise<string> {
   const Key = key(tenantId, path);
+  // Coerce to a Buffer so the SDK knows ContentLength (avoids the
+  // "Stream of unknown length" warning, especially for empty markers).
+  const Body = Buffer.isBuffer(body) ? body : Buffer.from(body, "utf8");
   await s3.send(
     new PutObjectCommand({
       Bucket: config.s3.bucket,
       Key,
-      Body: body,
+      Body,
+      ContentLength: Body.byteLength,
       ContentType: contentType,
     }),
   );

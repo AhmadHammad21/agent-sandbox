@@ -72,9 +72,9 @@ flowchart LR
 
 | Axis | Mechanism | Where |
 |------|-----------|-------|
-| Compute | One persistent Daytona sandbox per tenant, labelled `tenant_id` | `api/sandboxes/manager.ts` |
-| State | One Postgres **schema** `tenant_{id}`; every query runs with `SET search_path` | `api/db.ts` (`withTenant`) |
-| Files | One S3 **prefix** `tenant-{id}/` | `api/storage/s3.ts` |
+| Compute | One persistent Daytona sandbox per tenant, labelled `tenant_id` | `src/api/sandboxes/manager.ts` |
+| State | One Postgres **schema** `tenant_{id}`; every query runs with `SET search_path` | `src/api/db.ts` (`withTenant`) |
+| Files | One S3 **prefix** `tenant-{id}/` | `src/api/storage/s3.ts` |
 
 A cross-tenant query is impossible by construction: tenant-scoped DB access only
 happens inside `withTenant(tenantId, …)`, which sets the search path; the

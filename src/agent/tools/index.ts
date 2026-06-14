@@ -110,14 +110,7 @@ export async function runTool(
     case "run_code": {
       const language = String(input.language);
       const code = String(input.code);
-      if (language === "bash") return execCommand(ctx, code);
-      // Daytona runs code in the sandbox's default runtime; for non-default
-      // languages we shell out to the appropriate interpreter.
-      if (language === "python") {
-        return execCommand(ctx, `python3 - <<'EOF'\n${code}\nEOF`);
-      }
-      const res = await ctx.sandbox.process.codeRun(code);
-      return res.result ?? "";
+      return runCode(ctx, language, code);
     }
     case "exec":
       return execCommand(ctx, String(input.command));
@@ -143,4 +136,38 @@ async function execCommand(ctx: ToolContext, command: string): Promise<string> {
   const res = await ctx.sandbox.process.executeCommand(command);
   const out = res.result ?? "";
   return res.exitCode === 0 ? out : `exit ${res.exitCode}\n${out}`;
+}
+
+/**
+ * Run a code snippet in the requested language. The sandbox's default runtime
+ * (codeRun) is Python, so for everything else we write the snippet to a temp
+ * file and invoke the right interpreter (bun handles both TS and JS).
+ */
+async function runCode(
+  ctx: ToolContext,
+  language: string,
+  code: string,
+): Promise<string> {
+  switch (language) {
+    case "bash":
+      return execCommand(ctx, code);
+    case "python": {
+      const path = `/tmp/agent_${rand()}.py`;
+      await ctx.sandbox.fs.uploadFile(Buffer.from(code, "utf8"), path);
+      return execCommand(ctx, `python3 ${path}`);
+    }
+    case "javascript":
+    case "typescript": {
+      const ext = language === "typescript" ? "ts" : "mjs";
+      const path = `/tmp/agent_${rand()}.${ext}`;
+      await ctx.sandbox.fs.uploadFile(Buffer.from(code, "utf8"), path);
+      return execCommand(ctx, `bun run ${path}`);
+    }
+    default:
+      return `Unsupported language: ${language}`;
+  }
+}
+
+function rand(): string {
+  return Math.random().toString(36).slice(2, 10);
 }

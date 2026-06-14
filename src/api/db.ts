@@ -28,8 +28,9 @@ export async function withTenant<T>(
   const schema = schemaName(tenantId);
   const client = await pool.connect();
   try {
-    // schema is validated by schemaName(); safe to interpolate.
-    await client.query(`SET search_path TO "${schema}"`);
+    // schema is validated by schemaName(); safe to interpolate. public is
+    // included so the `vector` type / operators (extension in public) resolve.
+    await client.query(`SET search_path TO "${schema}", public`);
     return await fn(client);
   } finally {
     await client.query("RESET search_path").catch(() => {});

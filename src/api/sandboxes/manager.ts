@@ -11,8 +11,9 @@ import { config } from "../config.ts";
 import { withTenant } from "../db.ts";
 
 const daytona = new Daytona({
-  apiKey: config.daytona.apiKey || undefined,
-  apiUrl: config.daytona.apiUrl,
+  apiKey: config.daytona.apiKey,
+  // apiUrl only matters for self-hosted Daytona; omitted for Daytona Cloud.
+  ...(config.daytona.apiUrl ? { apiUrl: config.daytona.apiUrl } : {}),
 });
 
 export interface SandboxRecord {
@@ -70,8 +71,11 @@ export async function getOrCreateSandbox(tenantId: string): Promise<Sandbox> {
   }
 
   const sandbox = await daytona.create({
-    language: "typescript",
-    labels: { tenant_id: tenantId },
+    // Human-readable name in the Daytona dashboard, 1:1 with the tenant.
+    name: `agent-sandbox-${tenantId}`,
+    labels: { app: "agent-sandbox", tenant_id: tenantId },
+    // Idle sandboxes stop after 15 min; we resume them on the next session.
+    autoStopInterval: 15,
   });
   await writeState(tenantId, sandbox.id, "running");
   return sandbox;

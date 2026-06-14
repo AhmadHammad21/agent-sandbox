@@ -29,7 +29,8 @@ export const config = {
   },
   embeddings: {
     // OpenRouter is chat-only; embeddings use a dedicated provider.
-    provider: optional("EMBEDDING_PROVIDER", "local"),
+    // 'none' disables semantic memory (default for now), 'local', or 'voyage'.
+    provider: optional("EMBEDDING_PROVIDER", "none"),
     model: optional("EMBEDDING_MODEL", "voyage-3"),
     voyageApiKey: optional("VOYAGE_API_KEY", ""),
   },
@@ -37,8 +38,9 @@ export const config = {
     url: required("DATABASE_URL"),
   },
   daytona: {
-    apiUrl: optional("DAYTONA_API_URL", "http://localhost:3986"),
-    apiKey: optional("DAYTONA_API_KEY", ""),
+    apiKey: required("DAYTONA_API_KEY"),
+    // Only needed for self-hosted Daytona; leave empty for Daytona Cloud.
+    apiUrl: optional("DAYTONA_API_URL", ""),
   },
   s3: {
     endpoint: optional("S3_ENDPOINT", "http://localhost:9000"),
